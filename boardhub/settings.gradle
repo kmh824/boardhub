@@ -1,0 +1,9 @@
+plugins {
+    id "org.gradle.toolchains.foojay-resolver-convention" version "0.8.0"
+}
+
+rootProject.name = "boardhub"
+
+// (선택) 중앙 저장소/플러그인 설정이 필요하면 여기에 추가
+// pluginManagement { repositories { gradlePluginPortal(); mavenCentral() } }
+// dependencyResolutionManagement { repositories { mavenCentral() } }
