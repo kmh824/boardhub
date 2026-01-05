@@ -1,5 +1,4 @@
 package com.boardhub.boardhub.domain.post.entity;
-
 import com.boardhub.boardhub.domain.board.entity.Board;
 import com.boardhub.boardhub.domain.common.BaseEntity;
 import com.boardhub.boardhub.domain.member.entity.Member;

@@ -1,5 +1,4 @@
 package com.boardhub.boardhub.domain.board.entity;
-
 import com.boardhub.boardhub.domain.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
