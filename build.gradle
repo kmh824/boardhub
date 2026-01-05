@@ -29,6 +29,7 @@ dependencies {
 
 	// DB
 	runtimeOnly 'org.postgresql:postgresql'
+	implementation 'org.flywaydb:flyway-database-postgresql'
 	// Redis (추가됨)
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 

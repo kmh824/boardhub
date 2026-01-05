@@ -1,0 +1,23 @@
+services:
+  # PostgreSQL (메인 DB)
+  postgres:
+    image: postgres:16.2-alpine
+    container_name: boardhub-db
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: boardhub
+      POSTGRES_USER: boardhub
+      POSTGRES_PASSWORD: boardhub  # 로컬 DB 접속 비밀번호
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Redis (캐시, 세션, 동시성 제어)
+  redis:
+    image: redis:alpine
+    container_name: boardhub-redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
