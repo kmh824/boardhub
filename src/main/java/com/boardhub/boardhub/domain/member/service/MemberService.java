@@ -2,7 +2,9 @@ package com.boardhub.boardhub.domain.member.service;
 
 import com.boardhub.boardhub.domain.member.entity.Member;
 import com.boardhub.boardhub.domain.member.repository.MemberRepository;
+import com.boardhub.boardhub.global.jwt.JwtTokenProvider;
 import com.boardhub.boardhub.web.dto.member.MemberJoinReqDto;
+import com.boardhub.boardhub.web.dto.member.MemberLoginReqDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,7 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
     public Long join(MemberJoinReqDto reqDto) {
@@ -26,5 +29,20 @@ public class MemberService {
         Member savedMember = memberRepository.save(reqDto.toEntity(passwordEncoder));
 
         return savedMember.getId();
+    }
+
+    @Transactional(readOnly = true)
+    public String login(MemberLoginReqDto reqDto) {
+        // 1. 이메일로 회원 조회
+        Member member = memberRepository.findByEmail(reqDto.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 이메일입니다."));
+
+        // 2. 비밀번호 검증 (DB 비번 vs 입력 비번)
+        if (!passwordEncoder.matches(reqDto.getPassword(), member.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        // 3. 토큰 생성 및 반환
+        return jwtTokenProvider.createToken(member.getEmail(), member.getRoleKey());
     }
 }
