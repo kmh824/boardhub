@@ -3,6 +3,7 @@ package com.boardhub.boardhub.domain.member.service;
 import com.boardhub.boardhub.domain.member.entity.Member;
 import com.boardhub.boardhub.domain.member.repository.MemberRepository;
 import com.boardhub.boardhub.global.jwt.JwtTokenProvider;
+import com.boardhub.boardhub.web.dto.member.MemberInfoResDto;
 import com.boardhub.boardhub.web.dto.member.MemberJoinReqDto;
 import com.boardhub.boardhub.web.dto.member.MemberLoginReqDto;
 import lombok.RequiredArgsConstructor;
@@ -44,5 +45,13 @@ public class MemberService {
 
         // 3. 토큰 생성 및 반환
         return jwtTokenProvider.createToken(member.getEmail(), member.getRoleKey());
+    }
+
+    // ✅ 내 정보 조회 로직
+    @Transactional(readOnly = true)
+    public MemberInfoResDto getMyInfo(String email) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        return new MemberInfoResDto(member);
     }
 }

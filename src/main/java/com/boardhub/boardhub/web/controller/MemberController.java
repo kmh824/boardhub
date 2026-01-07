@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.*;
 import com.boardhub.boardhub.web.dto.member.MemberLoginReqDto;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import com.boardhub.boardhub.web.dto.member.MemberInfoResDto;
+import java.security.Principal;
+import org.springframework.web.bind.annotation.PostMapping;
 
 @RestController
 @RequestMapping("/api/members")
@@ -37,5 +40,31 @@ public class MemberController {
         response.addCookie(cookie);
 
         return ResponseEntity.ok("로그인 성공! 🔑");
+    }
+
+    // ✅ 내 정보 조회 API
+    @GetMapping("/info")
+    public ResponseEntity<MemberInfoResDto> getMyInfo(Principal principal) {
+        // principal.getName()에는 아까 필터에서 넣은 "email"이 들어있음
+        String email = principal.getName();
+
+        // 이메일로 DB 조회 (Service에 메서드 추가 필요 없이 Repository 바로 호출해도 됨, 간단하니까)
+        // 하지만 정석대로 Service 거쳐서 가져오겠습니다.
+        MemberInfoResDto memberInfo = memberService.getMyInfo(email);
+
+        return ResponseEntity.ok(memberInfo);
+    }
+
+    // ✅ 로그아웃 API (쿠키 삭제)
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletResponse response) {
+        // 같은 이름("accessToken")의 쿠키를 만들고, 수명을 0으로 설정해서 덮어씌움
+        Cookie cookie = new Cookie("accessToken", null);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0); // 수명 0초 = 즉시 삭제
+
+        response.addCookie(cookie);
+        return ResponseEntity.ok("로그아웃 성공");
     }
 }

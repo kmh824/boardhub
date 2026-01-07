@@ -1,30 +1,42 @@
 package com.boardhub.boardhub.global.config;
 
+import com.boardhub.boardhub.global.jwt.JwtAuthenticationFilter;
+import com.boardhub.boardhub.global.jwt.JwtTokenProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final JwtTokenProvider jwtTokenProvider; // ✅ 주입
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // REST API 서버는 CSRF 보안 기능 불필요 (비활성화)
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 안 씀 (토큰 방식)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/**").permitAll() // "/api/"로 시작하는 주소는 로그인 없이 허용!
-                        .anyRequest().authenticated() // 그 외 나머지 주소는 모두 로그인 필요
-                );
+                        // ✅ 중요: 회원가입, 로그인은 누구나 가능
+                        .requestMatchers("/api/members/join", "/api/members/login", "/api/health").permitAll()
+                        // ✅ 그 외 모든 요청(내 정보 조회 등)은 로그인해야 가능
+                        .anyRequest().authenticated()
+                )
+                // ✅ 필터 추가: ID/PW 검사하기 전에 "토큰 검사"부터 해라
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // ✅ [추가] 비밀번호 암호화 도구 등록
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
