@@ -52,4 +52,9 @@ public class Post extends BaseEntity {
         this.title = title;
         this.content = content;
     }
+
+    // ✅ [추가] 조회수 증가 메서드
+    public void increaseViewCount() {
+        this.viewCount++;
+    }
 }
