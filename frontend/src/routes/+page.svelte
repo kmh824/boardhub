@@ -41,26 +41,37 @@
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                 <tr>
-                    <th scope="col" class="text-center" style="width: 10%">번호</th>
-                    <th scope="col" style="width: 10%">게시판</th>
-                    <th scope="col" style="width: 45%">제목</th>
-                    <th scope="col" class="text-center" style="width: 15%">작성자</th>
-                    <th scope="col" class="text-center" style="width: 20%">작성일</th>
+                    <th scope="col" class="text-center" style="width: 8%">번호</th>
+                    <th scope="col" class="text-center" style="width: 10%">게시판</th>
+                    <th scope="col" style="width: 40%">제목</th>
+                    <th scope="col" class="text-center" style="width: 12%">작성자</th>
+
+                    <th scope="col" class="text-center" style="width: 8%">추천</th>
+                    <th scope="col" class="text-center" style="width: 8%">조회</th>
+
+                    <th scope="col" class="text-center" style="width: 14%">작성일</th>
                 </tr>
                 </thead>
                 <tbody>
                 {#each posts as post (post.id)}
                     <tr onclick={() => goToDetail(post.id)} style="cursor: pointer;">
                         <td class="text-center">{post.id}</td>
-                        <td><span class="badge bg-secondary">{post.boardName}</span></td>
-                        <td class="fw-bold">{post.title}</td>
+                        <td class="text-center"><span class="badge bg-secondary">{post.boardName}</span></td>
+
+                        <td class="fw-bold text-truncate" style="max-width: 200px;">
+                            {post.title}
+                        </td>
+
                         <td class="text-center">{post.author}</td>
+
+                        <td class="text-center text-primary fw-bold">{post.likeCount}</td>
+                        <td class="text-center text-muted small">{post.viewCount}</td>
+
                         <td class="text-center text-muted small">{formatDate(post.modifiedDate)}</td>
                     </tr>
                 {:else}
                     <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">
-                            아직 등록된 게시글이 없습니다. 📝
+                        <td colspan="7" class="text-center py-5 text-muted"> 아직 등록된 게시글이 없습니다. 📝
                         </td>
                     </tr>
                 {/each}
