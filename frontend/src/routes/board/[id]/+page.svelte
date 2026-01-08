@@ -1,31 +1,55 @@
 <script lang="ts">
     import { page } from '$app/stores';
     import { onMount } from 'svelte';
+    import { goto } from '$app/navigation'; // 삭제 후 이동 위해 필요
 
-    // 1. 주소창에서 글 번호(id) 가져오기
     const postId = $page.params.id;
-
     let post: any = null;
+    let currentUserEmail = ""; // 로그인한 사람 이메일
 
-    // 2. 화면 켜지면 백엔드에서 상세 정보 가져오기
     onMount(async () => {
         try {
-            const response = await fetch(`http://localhost:8080/api/posts/${postId}`);
-            if (response.ok) {
-                post = await response.json();
-            } else {
-                alert("존재하지 않거나 삭제된 게시글입니다.");
-                history.back(); // 뒤로 가기
+            // 1. 게시글 정보 가져오기
+            const postRes = await fetch(`http://localhost:8080/api/posts/${postId}`);
+            if (postRes.ok) {
+                post = await postRes.json();
+            }
+
+            // 2. 내 정보(로그인 정보) 가져오기 -> 본인 확인용
+            const userRes = await fetch('http://localhost:8080/api/members/info', { credentials: 'include' });
+            if (userRes.ok) {
+                const userData = await userRes.json();
+                currentUserEmail = userData.email;
             }
         } catch (e) {
             console.error(e);
-            alert("서버 오류가 발생했습니다.");
         }
     });
 
-    // 날짜 포맷 함수
+    // ... formatDate 함수 등 기존 코드 유지 ...
     function formatDate(dateString: string) {
         return new Date(dateString).toLocaleString();
+    }
+
+    // 3. 삭제 함수
+    async function handleDelete() {
+        if (!confirm("정말 삭제하시겠습니까? 🗑️")) return;
+
+        try {
+            const response = await fetch(`http://localhost:8080/api/posts/${postId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                alert("삭제되었습니다.");
+                goto('/'); // 메인으로 이동
+            } else {
+                alert("삭제 실패: " + await response.text());
+            }
+        } catch (e) {
+            alert("오류 발생");
+        }
     }
 </script>
 
@@ -53,6 +77,12 @@
 
         <div class="d-flex justify-content-center gap-2 border-top pt-4">
             <a href="/" class="btn btn-secondary px-4">목록으로</a>
+            {#if post && post.authorEmail === currentUserEmail}
+                <div class="d-flex gap-2">
+                    <a href="/board/edit/{postId}" class="btn btn-outline-primary">수정</a>
+                    <button class="btn btn-outline-danger" on:click={handleDelete}>삭제</button>
+                </div>
+            {/if}
         </div>
     {:else}
         <div class="text-center py-5">

@@ -15,6 +15,7 @@ import com.boardhub.boardhub.web.dto.post.PostListResDto;
 import org.springframework.data.domain.Sort;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.boardhub.boardhub.web.dto.post.PostUpdateReqDto;
 
 @Service
 @RequiredArgsConstructor
@@ -59,5 +60,37 @@ public class PostService {
         post.increaseViewCount();
 
         return new PostDetailResDto(post);
+    }
+
+    // ✅ [추가] 게시글 수정
+    @Transactional
+    public Long update(Long id, String email, PostUpdateReqDto reqDto) {
+        // 1. 게시글 찾기
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다. id=" + id));
+
+        // 2. 작성자 검증 (로그인한 이메일 vs 글쓴이 이메일)
+        if (!post.getMember().getEmail().equals(email)) {
+            throw new IllegalArgumentException("수정 권한이 없습니다.");
+        }
+
+        // 3. 수정 (더티 체킹: save 안 해도 트랜잭션 끝나면 자동 업데이트)
+        post.update(reqDto.getTitle(), reqDto.getContent());
+
+        return id;
+    }
+
+    // ✅ [추가] 게시글 삭제
+    @Transactional
+    public void delete(Long id, String email) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다. id=" + id));
+
+        // 작성자 검증
+        if (!post.getMember().getEmail().equals(email)) {
+            throw new IllegalArgumentException("삭제 권한이 없습니다.");
+        }
+
+        postRepository.delete(post);
     }
 }

@@ -13,6 +13,7 @@ public class PostDetailResDto {
     private String boardName;
     private LocalDateTime modifiedDate;
     private long viewCount; // 조회수
+    private String authorEmail; // ✅ [추가] 작성자 이메일 (본인 확인용)
 
     public PostDetailResDto(Post entity) {
         this.id = entity.getId();
@@ -22,5 +23,6 @@ public class PostDetailResDto {
         this.boardName = entity.getBoard().getName();
         this.modifiedDate = entity.getUpdatedAt(); // BaseEntity 필드명 주의 (updatedAt)
         this.viewCount = entity.getViewCount();
+        this.authorEmail = entity.getMember().getEmail(); // ✅ [추가] 이메일 담기
     }
 }
