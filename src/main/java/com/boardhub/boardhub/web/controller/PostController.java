@@ -53,4 +53,17 @@ public class PostController {
         postService.delete(id, principal.getName());
         return ResponseEntity.ok("게시글이 삭제되었습니다. 🗑️");
     }
+
+    // ✅ [추가] 추천 토글 API
+    @PostMapping("/{id}/like")
+    public ResponseEntity<String> like(@PathVariable Long id, Principal principal) {
+        boolean liked = postService.toggleLike(id, principal.getName());
+        return ResponseEntity.ok(liked ? "추천했습니다! 👍" : "추천을 취소했습니다.");
+    }
+
+    // ✅ [추가] 내 추천 여부 확인 API
+    @GetMapping("/{id}/like")
+    public ResponseEntity<Boolean> isLiked(@PathVariable Long id, Principal principal) {
+        return ResponseEntity.ok(postService.isLiked(id, principal.getName()));
+    }
 }

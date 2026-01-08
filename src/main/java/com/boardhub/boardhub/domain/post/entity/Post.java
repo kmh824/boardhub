@@ -25,6 +25,7 @@ public class Post extends BaseEntity {
 
     private long viewCount; // 조회수
 
+    @Column(columnDefinition = "integer default 0", nullable = false)
     private long likeCount; // 좋아요 수
 
     // 작성자 (Member 엔티티와 연결)
@@ -56,5 +57,17 @@ public class Post extends BaseEntity {
     // ✅ [추가] 조회수 증가 메서드
     public void increaseViewCount() {
         this.viewCount++;
+    }
+
+    // ✅ 추천수 증가
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    // ✅ 추천수 감소
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
     }
 }

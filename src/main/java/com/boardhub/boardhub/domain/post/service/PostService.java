@@ -14,8 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.boardhub.boardhub.web.dto.post.PostListResDto;
 import org.springframework.data.domain.Sort;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import com.boardhub.boardhub.web.dto.post.PostUpdateReqDto;
+import com.boardhub.boardhub.domain.like.entity.PostLike;
+import com.boardhub.boardhub.domain.like.repository.PostLikeRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +27,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
     private final BoardRepository boardRepository;
+    private final PostLikeRepository postLikeRepository;
 
     @Transactional
     public Long write(String email, PostWriteReqDto reqDto) {
@@ -92,5 +96,45 @@ public class PostService {
         }
 
         postRepository.delete(post);
+    }
+
+    // ✅ [추가] 추천 토글 기능 (좋아요 <-> 좋아요 취소)
+    @Transactional
+    public boolean toggleLike(Long postId, String email) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
+
+        // 이미 추천했는지 확인
+        Optional<PostLike> postLikeOptional = postLikeRepository.findByMemberAndPost(member, post);
+
+        if (postLikeOptional.isPresent()) {
+            // 이미 추천함 -> 취소 (삭제)
+            postLikeRepository.delete(postLikeOptional.get());
+            post.decreaseLikeCount();
+            return false; // 추천 취소됨 (false)
+        } else {
+            // 추천 안 함 -> 추천 (생성)
+            PostLike postLike = PostLike.builder()
+                    .member(member)
+                    .post(post)
+                    .build();
+            postLikeRepository.save(postLike);
+            post.increaseLikeCount();
+            return true; // 추천됨 (true)
+        }
+    }
+
+    // ✅ [추가] 내가 이 글을 추천했는지 확인 (화면 로딩용)
+    @Transactional(readOnly = true)
+    public boolean isLiked(Long postId, String email) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("회원 찾기 실패"));
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글 찾기 실패"));
+
+        return postLikeRepository.findByMemberAndPost(member, post).isPresent();
     }
 }
