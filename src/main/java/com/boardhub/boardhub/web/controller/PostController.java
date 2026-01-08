@@ -66,4 +66,11 @@ public class PostController {
     public ResponseEntity<Boolean> isLiked(@PathVariable Long id, Principal principal) {
         return ResponseEntity.ok(postService.isLiked(id, principal.getName()));
     }
+
+    // ✅ [추가] 특정 게시판 글 목록 조회 API
+    // 요청 예시: GET /api/posts?boardCode=free
+    @GetMapping(params = "boardCode")
+    public ResponseEntity<List<PostListResDto>> findByBoard(@RequestParam String boardCode) {
+        return ResponseEntity.ok(postService.findByBoard(boardCode));
+    }
 }

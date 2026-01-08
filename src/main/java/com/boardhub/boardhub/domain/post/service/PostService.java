@@ -137,4 +137,12 @@ public class PostService {
 
         return postLikeRepository.findByMemberAndPost(member, post).isPresent();
     }
+
+    // ✅ [추가] 특정 게시판 글 목록 조회
+    @Transactional(readOnly = true)
+    public List<PostListResDto> findByBoard(String boardCode) {
+        return postRepository.findByBoard_CodeOrderByIdDesc(boardCode).stream()
+                .map(PostListResDto::new)
+                .collect(Collectors.toList());
+    }
 }

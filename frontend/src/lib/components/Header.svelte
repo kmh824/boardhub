@@ -44,8 +44,8 @@
 
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link" href="/board/free">자유게시판</a></li>
-                <li class="nav-item"><a class="nav-link" href="/board/humor">유머게시판</a></li>
+                <li class="nav-item"><a class="nav-link" href="/category/free">자유게시판</a></li>
+                <li class="nav-item"><a class="nav-link" href="/category/humor">유머게시판</a></li>
             </ul>
 
             <ul class="navbar-nav align-items-center">
