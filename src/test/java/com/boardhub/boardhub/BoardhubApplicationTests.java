@@ -11,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.concurrent.CountDownLatch;
@@ -34,6 +35,9 @@ class BoardhubApplicationTests {
 
 	@Autowired
 	private BoardRepository boardRepository;
+
+	@Autowired
+	private RedisTemplate<String, String> redisTemplate; // ✅ 검증용 주입
 
 	@Test
 	@DisplayName("동시성 이슈 확인: 100명이 동시에 조회하면 조회수가 100이 되어야 한다.")
@@ -63,6 +67,10 @@ class BoardhubApplicationTests {
 
 		Long postId = post.getId();
 
+		// ✅ [추가] 테스트 시작 전 Redis 초기화 (혹시 모를 쓰레기값 제거)
+		String redisKey = "viewCount:" + postId;
+		redisTemplate.delete(redisKey);
+
 		// 2. 동시성 테스트 환경 설정
 		int threadCount = 100;
 		ExecutorService executorService = Executors.newFixedThreadPool(32);
@@ -81,11 +89,13 @@ class BoardhubApplicationTests {
 
 		latch.await();
 
-		// 4. 결과 검증
-		Post resultPost = postRepository.findById(postId).orElseThrow();
-		System.out.println("최종 조회수: " + resultPost.getViewCount());
+		// 4. 결과 검증 (DB가 아닌 Redis를 확인!)
+		String value = redisTemplate.opsForValue().get(redisKey);
+		long viewCount = Long.parseLong(value);
 
-		// 100번 불렀으니 100이어야 함! (실패 예상: Expected 100, Actual 34...)
-		assertThat(resultPost.getViewCount()).isEqualTo(100);
+		System.out.println("최종 조회수(Redis): " + viewCount);
+
+		// 이제는 성공해야 함!
+		assertThat(viewCount).isEqualTo(100);
 	}
 }

@@ -70,4 +70,9 @@ public class Post extends BaseEntity {
             this.likeCount--;
         }
     }
+
+    // ✅ [추가] Redis 값으로 조회수 동기화
+    public void syncViewCount(long viewCount) {
+        this.viewCount = viewCount;
+    }
 }
