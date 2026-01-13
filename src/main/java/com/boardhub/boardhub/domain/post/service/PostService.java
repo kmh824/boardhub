@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.boardhub.boardhub.web.dto.post.PostListResDto;
-import org.springframework.data.domain.Sort;
+// import org.springframework.data.domain.Sort; // QueryDSL 내부에서 정렬하므로 더 이상 필요 없음
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -46,15 +46,17 @@ public class PostService {
         return post.getId();
     }
 
-    // ✅ [추가] 게시글 전체 조회 (최신순)
+    // ✅ [수정] 게시글 전체 조회 (N+1 문제 해결 버전)
     @Transactional(readOnly = true)
     public List<PostListResDto> findAllDesc() {
-        return postRepository.findAll(Sort.by(Sort.Direction.DESC, "id")).stream()
+        // 기존: postRepository.findAll(Sort.by(...)) -> N+1 발생 🚨
+        // 변경: QueryDSL Custom 메서드 사용 -> 1방 쿼리 (Join Fetch) ✨
+        return postRepository.findAllWithMemberAndBoard().stream()
                 .map(PostListResDto::new) // 하나씩 DTO로 변환
                 .collect(Collectors.toList());
     }
 
-    // ✅ [추가] 게시글 상세 조회
+    // ✅ 게시글 상세 조회
     @Transactional
     public PostDetailResDto findById(Long id) {
         Post post = postRepository.findById(id)
@@ -66,7 +68,7 @@ public class PostService {
         return new PostDetailResDto(post);
     }
 
-    // ✅ [추가] 게시글 수정
+    // ✅ 게시글 수정
     @Transactional
     public Long update(Long id, String email, PostUpdateReqDto reqDto) {
         // 1. 게시글 찾기
@@ -84,7 +86,7 @@ public class PostService {
         return id;
     }
 
-    // ✅ [추가] 게시글 삭제
+    // ✅ 게시글 삭제
     @Transactional
     public void delete(Long id, String email) {
         Post post = postRepository.findById(id)
@@ -98,7 +100,7 @@ public class PostService {
         postRepository.delete(post);
     }
 
-    // ✅ [추가] 추천 토글 기능 (좋아요 <-> 좋아요 취소)
+    // ✅ 추천 토글 기능 (좋아요 <-> 좋아요 취소)
     @Transactional
     public boolean toggleLike(Long postId, String email) {
         Member member = memberRepository.findByEmail(email)
@@ -127,7 +129,7 @@ public class PostService {
         }
     }
 
-    // ✅ [추가] 내가 이 글을 추천했는지 확인 (화면 로딩용)
+    // ✅ 내가 이 글을 추천했는지 확인 (화면 로딩용)
     @Transactional(readOnly = true)
     public boolean isLiked(Long postId, String email) {
         Member member = memberRepository.findByEmail(email)
@@ -138,7 +140,7 @@ public class PostService {
         return postLikeRepository.findByMemberAndPost(member, post).isPresent();
     }
 
-    // ✅ [추가] 특정 게시판 글 목록 조회
+    // ✅ 특정 게시판 글 목록 조회
     @Transactional(readOnly = true)
     public List<PostListResDto> findByBoard(String boardCode) {
         return postRepository.findByBoard_CodeOrderByIdDesc(boardCode).stream()

@@ -4,7 +4,7 @@ import com.boardhub.boardhub.domain.post.entity.Post;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
-public interface PostRepository extends JpaRepository<Post, Long> {
+public interface PostRepository extends JpaRepository<Post, Long>, PostRepositoryCustom {
     // ✅ 게시판 코드(free, humor)로 글 목록 찾기 (최신순)
     List<Post> findByBoard_CodeOrderByIdDesc(String boardCode);
 
