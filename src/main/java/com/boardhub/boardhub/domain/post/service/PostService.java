@@ -19,6 +19,9 @@ import java.util.stream.Collectors;
 import com.boardhub.boardhub.web.dto.post.PostUpdateReqDto;
 import com.boardhub.boardhub.domain.like.entity.PostLike;
 import com.boardhub.boardhub.domain.like.repository.PostLikeRepository;
+import com.boardhub.boardhub.web.dto.post.PostSearchCondition;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -146,5 +149,11 @@ public class PostService {
         return postRepository.findByBoard_CodeOrderByIdDesc(boardCode).stream()
                 .map(PostListResDto::new)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PostListResDto> search(PostSearchCondition condition, Pageable pageable) {
+        return postRepository.search(condition, pageable)
+                .map(PostListResDto::new);
     }
 }

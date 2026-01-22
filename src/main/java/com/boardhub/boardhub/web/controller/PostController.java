@@ -10,7 +10,10 @@ import org.springframework.web.bind.annotation.*;
 import com.boardhub.boardhub.web.dto.post.PostListResDto;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import java.util.List;
-
+import com.boardhub.boardhub.web.dto.post.PostSearchCondition;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import java.security.Principal;
 
 @RestController
@@ -72,5 +75,12 @@ public class PostController {
     @GetMapping(params = "boardCode")
     public ResponseEntity<List<PostListResDto>> findByBoard(@RequestParam String boardCode) {
         return ResponseEntity.ok(postService.findByBoard(boardCode));
+    }
+
+    @GetMapping("/api/posts/search")
+    public Page<PostListResDto> searchPosts(
+            PostSearchCondition condition,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return postService.search(condition, pageable);
     }
 }
