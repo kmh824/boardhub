@@ -1,37 +1,39 @@
 <script lang="ts">
-    import { page } from '$app/stores';
-    import { goto } from '$app/navigation';
-    import Search from '$lib/components/Search.svelte'; // ✅ 검색 컴포넌트 추가
+    import { page } from '$app/stores'; // ✅ 현재 URL 정보를 담고 있는 스토어
+    import { goto } from '$app/navigation'; // ✅ URL 이동 함수
+    import { onMount } from 'svelte';
+    import Search from '$lib/components/Search.svelte';
 
-    // 주소창에서 게시판 코드(free, humor) 가져오기
+    // 1. URL에서 필요한 정보들을 실시간으로 읽어옵니다. (반응형 $:)
     $: boardCode = $page.params.code;
+    $: keyword = $page.url.searchParams.get('keyword') || '';     // URL에 ?keyword= 가 있으면 가져옴
+    $: searchType = $page.url.searchParams.get('searchType') || 'title';
 
     let posts: any[] = [];
     let boardName = "";
 
-    // boardCode가 바뀌면 실행 (메뉴 이동 시)
+    // 2. URL 정보(boardCode, keyword 등)가 바뀔 때마다 자동으로 실행됨! ✨
     $: if (boardCode) {
         boardName = boardCode === 'free' ? '자유게시판' : '유머게시판';
-        loadPosts(); // 게시판 바뀌면 목록 새로고침 (검색어 없이)
+        // URL에 있는 최신 keyword와 searchType으로 데이터 요청
+        loadPosts(keyword, searchType);
     }
 
-    // ✅ 게시글 로딩 함수 (검색 파라미터 받도록 수정)
-    async function loadPosts(searchParams = {}) {
-        const { keyword, searchType } = searchParams as any;
-
-        // ✅ 기본 URL: 검색 API 사용 + boardCode 고정!
+    // 데이터 가져오는 함수 (이제 파라미터를 직접 받아서 씁니다)
+    async function loadPosts(currentKeyword: string, currentType: string) {
+        // 기본 URL
         let url = `http://localhost:8080/api/posts/search?page=0&size=20&boardCode=${boardCode}`;
 
-        // 검색어가 있으면 파라미터 추가
-        if (keyword) {
-            url += `&keyword=${encodeURIComponent(keyword)}&searchType=${searchType}`;
+        // 검색어가 있으면 URL에 붙임
+        if (currentKeyword) {
+            url += `&keyword=${encodeURIComponent(currentKeyword)}&searchType=${currentType}`;
         }
 
         try {
             const response = await fetch(url);
             if (response.ok) {
                 const data = await response.json();
-                posts = data.content; // Page 객체의 content 꺼내기
+                posts = data.content;
             } else {
                 posts = [];
             }
@@ -40,10 +42,13 @@
         }
     }
 
-    // ✅ 검색 이벤트 핸들러
+    // 3. ✅ [핵심] 검색 버튼을 누르면 '데이터 요청'이 아니라 '주소 이동'을 합니다.
     function handleSearchEvent(event: CustomEvent) {
-        const { keyword, searchType } = event.detail;
-        loadPosts({ keyword, searchType });
+        const { keyword: newKeyword, searchType: newType } = event.detail;
+
+        // 현재 주소(pathname) 뒤에 쿼리 파라미터(?keyword=...)를 붙여서 이동
+        // `replaceState: false`로 해야 뒤로가기 기록이 남습니다 (기본값)
+        goto(`?keyword=${newKeyword}&searchType=${newType}`, { keepFocus: true });
     }
 
     function formatDate(dateString: string) {
@@ -59,7 +64,7 @@
     </div>
 
     <div class="d-flex justify-content-end mb-3">
-        <Search on:search={handleSearchEvent} />
+        <Search {keyword} {searchType} on:search={handleSearchEvent} />
     </div>
 
     <div class="card shadow-sm">
