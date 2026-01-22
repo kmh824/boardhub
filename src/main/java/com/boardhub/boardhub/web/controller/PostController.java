@@ -83,4 +83,12 @@ public class PostController {
             @PageableDefault(size = 10) Pageable pageable) {
         return postService.search(condition, pageable);
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<PostListResDto>> search(
+            PostSearchCondition condition,
+            @PageableDefault(size = 10) Pageable pageable) {
+
+        return ResponseEntity.ok(postService.search(condition, pageable));
+    }
 }
