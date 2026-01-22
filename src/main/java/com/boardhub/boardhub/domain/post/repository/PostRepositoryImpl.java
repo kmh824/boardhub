@@ -36,24 +36,26 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
     @Override
     public Page<Post> search(PostSearchCondition condition, Pageable pageable) {
 
-        // 1. 컨텐츠 조회 (검색 조건 적용)
         List<Post> content = queryFactory
                 .selectFrom(post)
-                .join(post.member, member).fetchJoin() // 검색 결과도 작성자 정보 한 번에 로딩
+                .join(post.member, member).fetchJoin()
                 .join(post.board, board).fetchJoin()
                 .where(
-                        searchCondition(condition) // 🔍 여기가 핵심!
+                        // ✅ 게시판 코드 조건 추가 (콤마로 구분하면 AND 조건이 됨)
+                        boardCodeEq(condition.getBoardCode()),
+                        searchCondition(condition)
                 )
                 .orderBy(post.id.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        // 2. 카운트 쿼리 (최적화: 페이징을 위해 전체 개수 필요)
         JPAQuery<Long> countQuery = queryFactory
                 .select(post.count())
                 .from(post)
                 .where(
+                        // ✅ 카운트 쿼리에도 똑같이 추가
+                        boardCodeEq(condition.getBoardCode()),
                         searchCondition(condition)
                 );
 
@@ -79,5 +81,10 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
 
         // 기본: 제목 + 내용 검색
         return post.title.contains(keyword).or(post.content.contains(keyword));
+    }
+
+    // ✅ [추가] 게시판 코드 조건 판별 메서드
+    private BooleanExpression boardCodeEq(String boardCode) {
+        return StringUtils.hasText(boardCode) ? post.board.code.eq(boardCode) : null;
     }
 }
